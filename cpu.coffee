@@ -55,41 +55,51 @@ class Cpu
             throw "Opcode #{op} (#{op.toString(16)}) not implemented"
     
     immediate_addr: -> @reg_PC + 1
-
     absolute_addr: -> @memory.read(@reg_PC + 1) | @memory.read(@reg_PC + 2) << 8
-
     zp_x_addr: -> @memory.read(@reg_PC + 1) + @reg_X
+
+    immediate_load: => @memory.read(@immediate_addr())
+    immediate_store: (value) => @memory.write(@immediate_addr(), value)
+
+    absolute_load: => @memory.read(@absolute_addr())
+    absolute_store: (value) => @memory.write(@absolute_addr(), value)
+
+    zp_x_load: => @memory.read(@zp_x_addr())
+    zp_x_store: (value) => @memory.write(@zp_x_addr(), value)
+
+    reg_a_load: => @reg_A
+    reg_a_store: (value) => @reg_A = value
     
     op_120: -> @op_SEI(); 1
-    op_141: -> @op_STA(@absolute_addr()); 3
+    op_141: -> @op_STA(@absolute_store); 3
     op_154: -> @op_TXS(); 1
-    op_162: -> @op_LDX(@immediate_addr()); 2
-    op_169: -> @op_LDA(@immediate_addr()); 2
-    op_173: -> @op_LDA(@absolute_addr()); 3
-    op_214: -> @op_DEC(@zp_x_addr()); 2
+    op_162: -> @op_LDX(@immediate_load); 2
+    op_169: -> @op_LDA(@immediate_load); 2
+    op_173: -> @op_LDA(@absolute_load); 3
+    op_214: -> @op_DEC(@zp_x_load, @zp_x_store); 2
     op_216: -> @op_CLD(); 1
     
     op_SEI: -> @flag_I = 1
 
-    op_STA: (addr) -> @memory.write(addr, @reg_A)
+    op_STA: (store) -> store(@reg_A)
 
     op_TXS: -> @reg_SP = @reg_X
     
-    op_LDX: (addr) ->
-        @reg_X = @memory.read(addr)
+    op_LDX: (load) ->
+        @reg_X = load()
         @flag_Z = 1 if @reg_X == 0
         @flag_N = 1 if @reg_X | 0x80
     
-    op_LDA: (addr) ->
-        @reg_A = @memory.read(addr)
+    op_LDA: (load) ->
+        @reg_A = load()
         @flag_Z = 1 if @reg_A == 0
         @flag_N = 1 if @reg_A | 0x80
     
-    op_DEC: (addr) ->
-        value = @memory.read(addr) - 1
+    op_DEC: (load, store) ->
+        value = load() - 1
         if value == -1
             value = 255
-        @memory.write(addr, value)
+        store(value)
         @flag_Z = 1 if value == 0
         @flag_N = 1 if value | 0x80
     
