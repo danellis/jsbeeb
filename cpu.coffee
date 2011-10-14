@@ -124,7 +124,7 @@ class Cpu
     op_8c: -> @op_STY(@store_abs); 3
     op_8d: -> @op_STA(@store_abs); 3
     op_8e: -> @op_STX(@store_abs); 3
-    op_90: -> @op_branch(-> not @flag_C); 0
+    op_90: -> @branch(-> not @flag_C); 0
     op_91: -> @op_STA(@store_idxy); 2
     op_95: -> @op_STA(@store_zpx); 2
     op_99: -> @op_STA(@store_absy); 3
@@ -137,18 +137,18 @@ class Cpu
     op_a9: -> @op_LDA(@load_imm); 2
     op_ad: -> @op_LDA(@load_abs); 3
     op_ae: -> @op_LDX(@load_abs); 3
-    op_b0: -> @op_branch(-> @flag_C); 0
+    op_b0: -> @branch(-> @flag_C); 0
     op_b9: -> @op_LDA(@load_absy); 3
     op_c5: -> @op_CMP(@load_zp); 2
     op_c8: -> @op_INY(); 1
     op_ca: -> @op_DEX(); 1
-    op_d0: -> @op_branch(-> @flag_Z); 0
+    op_d0: -> @branch(-> @flag_Z); 0
     op_d6: -> @op_DEC(@load_zpx, @store_zpx); 2
     op_d8: -> @op_CLD(); 1
     op_e0: -> @op_CPX(@load_imm); 2
     op_e8: -> @op_INX(); 1
     op_ee: -> @op_INC(@load_abs, @store_abs); 3
-    op_f0: -> @op_branch(-> not @flag_Z); 0
+    op_f0: -> @branch(-> not @flag_Z); 0
 
     
     # Operations
@@ -160,16 +160,6 @@ class Cpu
         store value
         @flag_N = if value & 0x80 then 1 else 0
         @flag_Z = if value == 0 then 1 else 0
-    
-    op_branch: (predicate) ->
-        @reg_PC += if predicate()
-            offset = @load(@reg_PC + 1)
-            if offset > 0x7f
-                offset = (~offset + 1)
-            (offset + 2) & 0xff
-        else
-            2
-        console.log "Branching to #{@reg_PC.toString(16)}"
     
     op_CMP: (load) ->
         value = load()
@@ -281,6 +271,17 @@ class Cpu
     
     op_CLD: -> @flag_D = 0
 
+    branch: (predicate) ->
+        @reg_PC +=
+            if predicate()
+                offset = @load(@reg_PC + 1)
+                if offset > 0x7f
+                    offset = (~offset + 1)
+                (offset + 2) & 0xff
+            else
+                2
+        console.log "Branching to #{@reg_PC.toString(16)}"
+    
 class BbcMicro
     constructor: ->
         memory_devices =
