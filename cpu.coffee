@@ -59,8 +59,8 @@ class Cpu
         op = @load(@reg_PC)
         hexOp = (if op < 16 then '0' else '') + op.toString(16)
         methodName = "op_#{hexOp}"
+        console.log("PC = #{@reg_PC.toString(16)}; op #{hexOp}")
         if methodName of this
-            console.log("PC = #{@reg_PC.toString(16)}; op #{hexOp}")
             offset = this[methodName]()
             @reg_PC += offset
         else
@@ -163,7 +163,7 @@ class Cpu
     op_39: -> @op_AND(@load_absy); 3
     op_3d: -> @op_AND(@load_absx); 3
     op_3e: -> @op_ROL(@load_absx, @store_absx); 3
-    op_40: -> @op_RTI(); 1
+    op_40: -> @op_RTI(); 0
     op_41: -> @op_EOR(@load_indx, @store_indx); 2
     op_45: -> @op_EOR(@load_zp, @store_zp); 2
     op_46: -> @op_LSR(@load_zp, @store_zp); 2
@@ -182,7 +182,7 @@ class Cpu
     op_59: -> @op_EOR(@load_absy, @store_absy); 3
     op_5d: -> @op_EOR(@load_absx, @store_absx); 3
     op_5e: -> @op_LSR(@load_absx, @store_absx); 3
-    op_60: -> @op_RTS(); 1
+    op_60: -> @op_RTS(); 0
     op_61: -> @op_ADC(@load_indx); 2
     op_65: -> @op_ADC(@load_zp); 2
     op_66: -> @op_ROR(@load_zp, @store_zp); 2
@@ -378,7 +378,7 @@ class Cpu
     op_JSR: ->
         @pushWord(@reg_PC + 3)
         @reg_PC = @loadWord(@reg_PC + 1)
-        console.log "Jumping to subrouting at #{@reg_PC.toString(16)}"
+        console.log "Jumping to subroutine at #{@reg_PC.toString(16)}"
     
     op_LDA: (load) ->
         @reg_A = load()
@@ -490,12 +490,13 @@ class Cpu
         @reg_PC +=
             if predicate()
                 offset = @load(@reg_PC + 1)
+                console.log "Branch offset = #{offset}"
                 if offset > 0x7f
                     offset = (~offset + 1)
                 (offset + 2) & 0xff
             else
+                console.log "Not following branch"
                 2
-        console.log "Branching to #{@reg_PC.toString(16)}"
     
     getStatusRegister: ->
         @reg_C | @reg_Z << 1 | @reg_I << 2 | @reg_D << 3 | @reg_B << 4 |
