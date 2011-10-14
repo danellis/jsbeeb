@@ -115,8 +115,8 @@ class Cpu
     store_zpx: (value) => @store(@load(@reg_PC + 1) + @reg_X, value)
     
     # Accumulator mode
-    load_a: => @reg_A
-    store_a: (value) => @reg_A = value
+    load_acc: => @reg_A
+    store_acc: (value) => @reg_A = value
     
     # Pre-indexed, X mode
     load_indx: => @load(@loadWord(@load(@reg_PC + 1) + @reg_X))
