@@ -353,7 +353,7 @@ class Cpu
         @pushWord(@reg_PC)
         @push(@getStatusRegister())
         @flag_B = 1
-        @reg_PC = 0xfffe
+        @reg_PC = @loadWord(0xfffe)
     
     op_CLC: -> @flag_C = 0
     
