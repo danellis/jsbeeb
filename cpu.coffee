@@ -445,7 +445,7 @@ class Cpu
     
     op_PHA: -> @push(@reg_A)
     
-    op_PHP: -> @pushWord(@getStatusRegister)
+    op_PHP: -> @push(@getStatusRegister())
     
     op_PLA: ->
         @reg_A = @pull()
@@ -453,7 +453,7 @@ class Cpu
         @flag_N = if @reg_A | 0x80 then 1 else 0
     
     op_PLP: ->
-        @setStatusRegister(@pullWord())
+        @setStatusRegister(@pull())
     
     op_ROL: (load, store) ->
         value = load()
