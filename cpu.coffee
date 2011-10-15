@@ -272,15 +272,23 @@ class Cpu
     op_dd: -> @op_CMP(@load_absx); 3
     op_de: -> @op_DEC(@load_absx, @store_absx); 3
     op_e0: -> @op_CPX(@load_imm); 2
+    op_e1: -> @op_SBC(@load_idxx); 2
     op_e4: -> @op_CPX(@load_zp); 2
+    op_e5: -> @op_SBC(@load_zp); 2
     op_e6: -> @op_INC(@load_zp, @store_zp); 2
     op_e8: -> @op_INX(); 1
+    op_e9: -> @op_SBC(@load_imm); 2
     op_ea: -> @op_NOP(); 1
     op_ec: -> @op_CPX(@load_abs); 3
+    op_ed: -> @op_SBC(@load_abs); 3
     op_ee: -> @op_INC(@load_abs, @store_abs); 3
     op_f0: -> @branch(-> @flag_Z); 0
+    op_f1: -> @op_SBC(@load_idxy); 2
+    op_f5: -> @op_SBC(@load_zpx); 2
     op_f6: -> @op_INC(@load_zpx, @store_zpx); 2
     op_f8: -> @op_SED(); 1
+    op_f9: -> @op_SBC(@load_absy); 3
+    op_fd: -> @op_SBC(@load_absx); 3
     op_fe: -> @op_INC(@load_absx, @store_absx); 3
 
     # Operations
