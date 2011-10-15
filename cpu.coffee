@@ -27,15 +27,31 @@ class Rom
     load: (address) -> @array[address - @base]
     store: (address, value) -> throw "Cannot write to ROM!"
 
+class PagedRom
+    constructor: (@ui, @base, @roms) ->
+        @rom = 0
+    
+    load: (address) -> if @rom of @roms then @roms[@rom][address - @base] else 0
+    
+    store: (address, value) -> throw "Cannot write to ROM!"
+
+    select: (rom) ->
+        @ui.log "[PagedRom] Switching to rom #{rom}"
+        @rom = rom
+
 class Sheila
-    constructor: (@ui) ->
-        
+    constructor: (@ui, @callbacks) ->
+    
+    storers:
+        0xfe30: (value) -> @callbacks['selectRom']?(value)
+    
     load: (address) ->
-        @ui.log "Sheila read from 0x#{(address & 0xff).toString(16)}"
+        @ui.log "Sheila read from 0x#{address.toString(16)}"
         0
 
     store: (address, value) ->
-        @ui.log "Sheila write to 0x#{(address & 0xff).toString(16)}"
+        @ui.log "Sheila write to 0x#{address.toString(16)}"
+        @storers[address]?.call(this, value)
 
 class Cpu
     constructor: (@ui, @memory_map) ->
@@ -560,19 +576,20 @@ class Cpu
     
 class BbcMicro
     constructor: (ui) ->
-        memory_devices =
+        @pagedRom = new PagedRom(ui, 0x8000, {15: basic_rom})
+        memoryDevices =
             r: new Ram(0x8000)
             o: new Rom(0xc000, os_rom)
-            p: new UnmappedPage("paged rom")
+            p: @pagedRom
             f: new UnmappedPage("FRED")
             j: new UnmappedPage("JIM")
-            s: new Sheila(ui)
-        memory_map =
+            s: new Sheila(ui, {selectRom: (rom) => @pagedRom.select(rom)})
+        memoryMap =
             "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr" +
             "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr" +
             "pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp" +
             "oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooofjso"
-        @cpu = new Cpu(ui, memory_devices[p] for p in memory_map)
+        @cpu = new Cpu(ui, memoryDevices[p] for p in memoryMap)
     
     start: -> @cpu.run()
 
