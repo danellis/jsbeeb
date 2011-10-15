@@ -119,16 +119,16 @@ class Cpu
     store_acc: (value) => @reg_A = value
     
     # Pre-indexed, X mode
-    load_indx: => @load(@loadWord(@load(@reg_PC + 1) + @reg_X))
-    store_indx: => @store(@loadWord(@load(@reg_PC + 1) + @reg_X), value)
+    load_idxx: => @load(@loadWord(@load(@reg_PC + 1) + @reg_X))
+    store_idxx: => @store(@loadWord(@load(@reg_PC + 1) + @reg_X), value)
     
     # Post-indexed, Y mode
-    load_indy: => @load(@loadWord(@load(@reg_PC + 1)) + @reg_X)
-    store_indy: (value) => @store(@loadWord(@load(@reg_PC + 1)) + @reg_X, value)
+    load_idxy: => @load(@loadWord(@load(@reg_PC + 1)) + @reg_X)
+    store_idxy: (value) => @store(@loadWord(@load(@reg_PC + 1)) + @reg_X, value)
     
     # Opcodes
     op_00: -> @op_BRK(); 1
-    op_01: -> @op_ORA(@load_indx); 2
+    op_01: -> @op_ORA(@load_idxx); 2
     op_05: -> @op_ORA(@load_zp); 2
     op_06: -> @op_ASL(@load_zp, @store_zp); 2
     op_08: -> @op_PHP(); 1
@@ -137,7 +137,7 @@ class Cpu
     op_0d: -> @op_ORA(@load_abs); 3
     op_0e: -> @op_ASL(@load_abs, @store_abs); 3
     op_10: -> @branch(-> not @flag_N); 0
-    op_11: -> @op_ORA(@load_indy); 2
+    op_11: -> @op_ORA(@load_idxy); 2
     op_15: -> @op_ORA(@load_zpx); 2
     op_16: -> @op_ASL(@load_zpx, @store_zpx); 2
     op_18: -> @op_CLC(); 1
@@ -145,7 +145,7 @@ class Cpu
     op_1d: -> @op_ORA(@load_absx); 3
     op_1e: -> @op_ASL(@load_absx, @store_absx); 3
     op_20: -> @op_JSR(); 0
-    op_21: -> @op_AND(@load_indx); 2
+    op_21: -> @op_AND(@load_idxx); 2
     op_24: -> @op_BIT(@load_zp); 2
     op_25: -> @op_AND(@load_zp); 2
     op_26: -> @op_ROL(@load_zp, @store_zp); 2
@@ -156,7 +156,7 @@ class Cpu
     op_2d: -> @op_AND(@load_abs); 3
     op_2e: -> @op_ROL(@load_abs, @store_abs); 3
     op_30: -> @branch(-> @flag_N); 0
-    op_31: -> @op_AND(@load_indy); 2
+    op_31: -> @op_AND(@load_idxy); 2
     op_35: -> @op_AND(@load_zpx); 2
     op_36: -> @op_ROL(@load_zpx, @store_zpx); 2
     op_38: -> @op_SEC(); 1
@@ -164,7 +164,7 @@ class Cpu
     op_3d: -> @op_AND(@load_absx); 3
     op_3e: -> @op_ROL(@load_absx, @store_absx); 3
     op_40: -> @op_RTI(); 0
-    op_41: -> @op_EOR(@load_indx, @store_indx); 2
+    op_41: -> @op_EOR(@load_idxx, @store_idxx); 2
     op_45: -> @op_EOR(@load_zp, @store_zp); 2
     op_46: -> @op_LSR(@load_zp, @store_zp); 2
     op_48: -> @op_PHA(); 1
@@ -175,7 +175,7 @@ class Cpu
     op_4d: -> @op_EOR(@load_abs, @store_abs); 3
     op_4e: -> @op_LSR(@load_abs, @store_abs); 3
     op_50: -> @branch(-> not @flag_V); 0
-    op_51: -> @op_EOR(@load_indy, @store_indy); 2
+    op_51: -> @op_EOR(@load_idxy, @store_idxy); 2
     op_55: -> @op_EOR(@load_zpx, @store_zpx); 2
     op_56: -> @op_LSR(@load_zpx, @store_zpx); 2
     op_58: -> @op_CLI(); 1
@@ -183,7 +183,7 @@ class Cpu
     op_5d: -> @op_EOR(@load_absx, @store_absx); 3
     op_5e: -> @op_LSR(@load_absx, @store_absx); 3
     op_60: -> @op_RTS(); 0
-    op_61: -> @op_ADC(@load_indx); 2
+    op_61: -> @op_ADC(@load_idxx); 2
     op_65: -> @op_ADC(@load_zp); 2
     op_66: -> @op_ROR(@load_zp, @store_zp); 2
     op_68: -> @op_PLA(); 1
@@ -193,14 +193,14 @@ class Cpu
     op_6d: -> @op_ADC(@load_abs); 3
     op_6e: -> @op_ROR(@load_abs, @store_abs); 3
     op_70: -> @branch(-> @flag_V); 0
-    op_71: -> @op_ADC(@load_indy); 2
+    op_71: -> @op_ADC(@load_idxy); 2
     op_75: -> @op_ADC(@load_zpx); 2
     op_76: -> @op_ROR(@load_zpx, @store_zpx); 2
     op_78: -> @op_SEI(); 1
     op_79: -> @op_ADC(@load_absy); 3
     op_7d: -> @op_ADC(@load_absx); 3
     op_7e: -> @op_ROR(@load_absx, @store_absx); 3
-    op_81: -> @op_STA(@store_indx); 2
+    op_81: -> @op_STA(@store_idxx); 2
     op_84: -> @op_STY(@store_zp); 2
     op_85: -> @op_STA(@store_zp); 2
     op_86: -> @op_STX(@store_zp); 2
@@ -210,7 +210,7 @@ class Cpu
     op_8d: -> @op_STA(@store_abs); 3
     op_8e: -> @op_STX(@store_abs); 3
     op_90: -> @branch(-> not @flag_C); 0
-    op_91: -> @op_STA(@store_indy); 2
+    op_91: -> @op_STA(@store_idxy); 2
     op_94: -> @op_STY(@store_zpx); 2
     op_95: -> @op_STA(@store_zpx); 2
     op_96: -> @op_STX(@store_zpy); 2
@@ -219,7 +219,7 @@ class Cpu
     op_9a: -> @op_TXS(); 1
     op_9d: -> @op_STA(@store_absx); 3
     op_a0: -> @op_LDY(@load_imm); 2
-    op_a1: -> @op_LDA(@load_indx); 2
+    op_a1: -> @op_LDA(@load_idxx); 2
     op_a2: -> @op_LDX(@load_imm); 2
     op_a4: -> @op_LDY(@load_zp); 2
     op_a5: -> @op_LDA(@load_zp); 2
@@ -231,7 +231,7 @@ class Cpu
     op_ad: -> @op_LDA(@load_abs); 3
     op_ae: -> @op_LDX(@load_abs); 3
     op_b0: -> @branch(-> @flag_C); 0
-    op_b1: -> @op_LDA(@load_indy); 2
+    op_b1: -> @op_LDA(@load_idxy); 2
     op_b4: -> @op_LDY(@load_zpx); 2
     op_b5: -> @op_LDA(@load_zpx); 2
     op_b6: -> @op_LDX(@load_zpy); 2
@@ -242,7 +242,7 @@ class Cpu
     op_bd: -> @op_LDA(@load_absx); 3
     op_be: -> @op_LDX(@load_absy); 3
     op_c0: -> @op_CPY(@load_imm); 2
-    op_c1: -> @op_CMP(@load_indx); 2
+    op_c1: -> @op_CMP(@load_idxx); 2
     op_c4: -> @op_CPY(@load_zp); 2
     op_c5: -> @op_CMP(@load_zp); 2
     op_c6: -> @op_DEC(@load_zp, @store_zp); 2
@@ -253,7 +253,7 @@ class Cpu
     op_cd: -> @op_CMP(@load_abs); 3
     op_ce: -> @op_DEC(@load_abs, @store_abs); 3
     op_d0: -> @branch(-> not @flag_Z); 0
-    op_d1: -> @op_CMP(@load_indy); 2
+    op_d1: -> @op_CMP(@load_idxy); 2
     op_d5: -> @op_CMP(@load_zpx); 2
     op_d6: -> @op_DEC(@load_zpx, @store_zpx); 2
     op_d8: -> @op_CLD(); 1
