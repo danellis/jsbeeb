@@ -486,6 +486,12 @@ class Cpu
         @reg_PC = addr
     
     op_SBC: (load) ->
+        @reg_A -= load() + if @flag_C then 0 else 1
+        @flag_V = if -128 <= @reg_A <= 127 then 0 else 1
+        @flag_C = if @reg_A >= 0 then 1 else 0
+        @flag_N = if @reg_A & 0x80 then 1 else 0
+        @flag_Z = if @reg_A == 0 then 1 else 0
+        @reg_A &= 0xff
     
     op_SEC: -> @flag_C = 1
     
