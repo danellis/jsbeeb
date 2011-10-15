@@ -1,3 +1,13 @@
+class Ui
+    constructor: ->
+        @element = document.getElementById('log')
+    
+    log: (message) ->
+        @element.appendChild document.createTextNode(message)
+        @element.appendChild document.createElement("br")
+
+ui = new Ui('log')
+
 class UnmappedPage
     constructor: (@name) ->
     
@@ -13,21 +23,22 @@ class Ram
 
 class Rom
     constructor: (@base, @array) ->
-        console.log("ROM length is #{@array.length}")
     
     load: (address) -> @array[address - @base]
     store: (address, value) -> throw "Cannot write to ROM!"
 
 class Sheila
+    constructor: (@ui) ->
+        
     load: (address) ->
-        console.log "Sheila read from 0x#{(address & 0xff).toString(16)}"
+        @ui.log "Sheila read from 0x#{(address & 0xff).toString(16)}"
         0
 
     store: (address, value) ->
-        console.log "Sheila write to 0x#{(address & 0xff).toString(16)}"
+        @ui.log "Sheila write to 0x#{(address & 0xff).toString(16)}"
 
 class Cpu
-    constructor: (@memory_map) ->
+    constructor: (@ui, @memory_map) ->
         @reg_A = 0
         @reg_X = 0
         @reg_Y = 0
@@ -43,23 +54,23 @@ class Cpu
         @flag_N = 0
         
     run: ->
-        console.log("Starting CPU")
+        @log("Starting CPU")
         @reg_PC = @loadWord(0xfffc)
-        console.log("Reset vector: #{@reg_PC.toString(16)}")
+        @log("Reset vector: #{@reg_PC.toString(16)}")
         halted = false
         until halted
             try
                 @execute()
             catch error
                 halted = true
-                alert("CPU halted: #{error}")
+                alert("CPU halted at #{@reg_PC.toString(16)}: #{error}")
         null
     
     execute: ->
         op = @load(@reg_PC)
         hexOp = (if op < 16 then '0' else '') + op.toString(16)
         methodName = "op_#{hexOp}"
-        console.log("PC = #{@reg_PC.toString(16)}; op #{hexOp}")
+        # @ui.log("PC = #{@reg_PC.toString(16)}; op #{hexOp}")
         if methodName of this
             offset = this[methodName]()
             @reg_PC += offset
@@ -511,23 +522,27 @@ class Cpu
         @reg_V = (value & 0x40) >> 6
         @reg_N = (value & 0x80) >> 7
     
+    log: (message) ->
+        @ui.log("[#{@reg_PC.toString(16)}] #{message}")
+    
 class BbcMicro
-    constructor: ->
+    constructor: (ui) ->
         memory_devices =
             r: new Ram(0x8000)
             o: new Rom(0xc000, os_rom)
             p: new UnmappedPage("paged rom")
             f: new UnmappedPage("FRED")
             j: new UnmappedPage("JIM")
-            s: new Sheila
+            s: new Sheila(ui)
         memory_map =
             "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr" +
             "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr" +
             "pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp" +
             "oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooofjso"
-        @cpu = new Cpu(memory_devices[p] for p in memory_map)
+        @cpu = new Cpu(ui, memory_devices[p] for p in memory_map)
     
     start: -> @cpu.run()
-        
-micro = new BbcMicro
+
+ui = new Ui
+micro = new BbcMicro(ui)
 micro.start()
