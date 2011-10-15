@@ -167,7 +167,7 @@ class Cpu
     store_idxy: (value) => @store(@loadWord(@load(@reg_PC + 1)) + @reg_X, value)
     
     # Opcodes
-    op_00: -> @op_BRK(); 1
+    op_00: -> @op_BRK(); 0
     op_01: -> @op_ORA(@load_idxx); 2
     op_05: -> @op_ORA(@load_zp); 2
     op_06: -> @op_ASL(@load_zp, @store_zp); 2
@@ -350,9 +350,8 @@ class Cpu
         @flag_N = if value & 0x80 then 1 else 0
     
     op_BRK: ->
-        @pushWord(@reg_PC)
-        @push(@getStatusRegister())
-        @flag_B = 1
+        @pushWord(@reg_PC + 1)
+        @push(@getStatusRegister() | 0x10)
         @reg_PC = @loadWord(0xfffe)
     
     op_CLC: -> @flag_C = 0
