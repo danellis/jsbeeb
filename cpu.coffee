@@ -87,19 +87,28 @@ class Cpu
         @memory_map[address >> 8].load(address + 1) << 8
 
     storeWord: (address, value) ->
-        @memory_map[address >> 8].store(address, value & 0xff) |
-        @memory_map[address >> 8].store(address + 1, value >> 8) << 8
+        @memory_map[address >> 8].store(address, value & 0xff)
+        @memory_map[address >> 8].store(address + 1, value >> 8)
     
-    push: (value) -> @store(0x100 + @reg_SP++, value)
+    push: (value) ->
+        @store(0x100 + @reg_SP--, value)
+        @log "push #{value.toString(16)} -> reg_SP=#{@reg_SP.toString(16)}" 
 
-    pull: -> @load(0x100 + --@reg_SP)
+    pull: ->
+        value = @load(0x100 + ++@reg_SP)
+        @log "pull -> #{value.toString(16)}, reg_SP=#{@reg_SP.toString(16)}" 
+        value
     
     pushWord: (value) ->
-        @storeWord(0x100 + @reg_SP, value)
-        @reg_SP += 2
-    pullWord: ->
+        @storeWord(0x100 + @reg_SP - 1, value)
         @reg_SP -= 2
-        @loadWord(0x100 + @reg_SP)
+        @log "pushWord #{value.toString(16)} -> reg_SP=#{@reg_SP.toString(16)}" 
+
+    pullWord: ->
+        @reg_SP += 2
+        value = @loadWord(0x100 + @reg_SP - 1)
+        @log "pullWord -> #{value.toString(16)}, reg_SP=#{@reg_SP.toString(16)}" 
+        value
     
     # Immediate mode
     load_imm: => @load(@reg_PC + 1)
@@ -108,6 +117,7 @@ class Cpu
     # Absolute mode
     load_abs: => @load(@loadWord(@reg_PC + 1))
     store_abs: (value) => @store(@loadWord(@reg_PC + 1), value)
+    load_abs_addr: => @loadWord(@reg_PC + 1)
     
     # Absolute, X mode
     load_absx: => @load(@loadWord(@reg_PC + 1) + @reg_X)
@@ -116,6 +126,9 @@ class Cpu
     # Absolute, Y mode
     load_absy: => @load(@loadWord(@reg_PC + 1) + @reg_Y)
     store_absy: (value) => @store(@loadWord(@reg_PC + 1) + @reg_Y)
+    
+    # Indirect mode
+    load_ind_addr: => @loadWord(@loadWord(@reg_PC + 1))
     
     # Zero page mode
     load_zp: => @load(@load(@reg_PC + 1))
@@ -182,7 +195,7 @@ class Cpu
     op_49: -> @op_EOR(@load_imm, @store_imm); 2
     op_4a: -> @op_LSR(@load_acc, @store_acc); 1
     op_4b: -> @op_ASR(@load_imm, @store_imm); 2
-    op_4c: -> @op_JMP(@load_abs); 0
+    op_4c: -> @op_JMP(@load_abs_addr); 0
     op_4d: -> @op_EOR(@load_abs, @store_abs); 3
     op_4e: -> @op_LSR(@load_abs, @store_abs); 3
     op_50: -> @branch(-> not @flag_V); 0
@@ -200,7 +213,7 @@ class Cpu
     op_68: -> @op_PLA(); 1
     op_69: -> @op_ADC(@load_imm); 2
     op_6a: -> @op_ROR(@load_acc, @store_acc); 1
-    op_6c: -> @op_JMP(@load_ind); 0
+    op_6c: -> @op_JMP(@load_ind_addr); 0
     op_6d: -> @op_ADC(@load_abs); 3
     op_6e: -> @op_ROR(@load_abs, @store_abs); 3
     op_70: -> @branch(-> @flag_V); 0
@@ -392,12 +405,15 @@ class Cpu
         @flag_N = if @reg_Y & 0x80 then 1 else 0
     
     op_JMP: (load) ->
-        @reg_PC = load()
+        addr = load()
+        @log "JMP to #{addr.toString(16)}"
+        @reg_PC = addr
     
     op_JSR: ->
         @pushWord(@reg_PC + 3)
-        @reg_PC = @loadWord(@reg_PC + 1)
-        console.log "Jumping to subroutine at #{@reg_PC.toString(16)}"
+        addr = @loadWord(@reg_PC + 1)
+        @log "Jumping to subroutine at #{addr.toString(16)}"
+        @reg_PC = addr
     
     op_LDA: (load) ->
         @reg_A = load()
@@ -460,9 +476,14 @@ class Cpu
     
     op_RTI: ->
         @setStatusRegister(@pull())
-        @reg_PC = @pullWord()
+        addr = @pullWord()
+        @log "Returning to #{addr.toString(16)} from interrupt"
+        @reg_PC = addr
     
-    op_RTS: -> @reg_PC = @pullWord()
+    op_RTS: ->
+        addr = @pullWord()
+        @log "Returning to #{addr.toString(16)}"
+        @reg_PC = addr
     
     op_SBC: (load) ->
     
@@ -506,16 +527,14 @@ class Cpu
         @flag_N = if @reg_A | 0x80 then 1 else 0
     
     branch: (predicate) ->
-        @reg_PC +=
-            if predicate()
+        offset =
+            if predicate.call(this)
                 offset = @load(@reg_PC + 1)
-                console.log "Branch offset = #{offset}"
-                if offset > 0x7f
-                    offset = (~offset + 1)
-                (offset + 2) & 0xff
+                if offset < 0x80 then offset else offset - 256
             else
-                console.log "Not following branch"
-                2
+                0
+        # unless offset == 0 then log "Branch from #{@reg_PC.toString(16)} to #{(@reg_PC + offset + 2).toString(16)}"
+        @reg_PC += offset + 2
     
     getStatusRegister: ->
         @reg_C | @reg_Z << 1 | @reg_I << 2 | @reg_D << 3 | @reg_B << 4 |
