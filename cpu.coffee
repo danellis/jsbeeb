@@ -386,7 +386,7 @@ class Cpu
             value = 255
         store value
         @flag_Z = if value == 0 then 1 else 0
-        @flag_N = if value | 0x80 then 1 else 0
+        @flag_N = if value & 0x80 then 1 else 0
     
     op_DEX: ->
         @reg_X = (@reg_X - 1) & 0xff
