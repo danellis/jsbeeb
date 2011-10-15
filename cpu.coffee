@@ -315,8 +315,8 @@ class Cpu
     
     op_AND: (load) ->
         @reg_A &= load()
-        @flag_Z = if value == 0 then 1 else 0
-        @flag_N = if value & 0x80 then 1 else 0
+        @flag_Z = if @reg_A == 0 then 1 else 0
+        @flag_N = if @reg_A & 0x80 then 1 else 0
     
     op_ASL: (load, store) ->
         value = load()
