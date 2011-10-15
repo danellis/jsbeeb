@@ -311,7 +311,7 @@ class Cpu
         @reg_A = value & 0xff
         @flag_Z = if value == 0 then 1 else 0
         @flag_N = if value & 0x80 then 1 else 0
-        # FIXME: @flag_V = "set if sign bit is incorrect"
+        @flag_V = if value & 0x80 != @reg_A & 0x80 then 1 else 0
     
     op_AND: (load) ->
         @reg_A &= load()
