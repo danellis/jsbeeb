@@ -137,11 +137,11 @@ class Cpu
     
     # Absolute, X mode
     load_absx: => @load(@loadWord(@reg_PC + 1) + @reg_X)
-    store_absx: (value) => @store(@loadWord(@reg_PC + 1) + @reg_X)
+    store_absx: (value) => @store(@loadWord(@reg_PC + 1) + @reg_X, value)
     
     # Absolute, Y mode
     load_absy: => @load(@loadWord(@reg_PC + 1) + @reg_Y)
-    store_absy: (value) => @store(@loadWord(@reg_PC + 1) + @reg_Y)
+    store_absy: (value) => @store(@loadWord(@reg_PC + 1) + @reg_Y, value)
     
     # Indirect mode
     load_ind_addr: => @loadWord(@loadWord(@reg_PC + 1))
