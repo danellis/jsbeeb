@@ -404,19 +404,19 @@ class Cpu
         value = load()
         @flag_C = if @reg_A >= value then 1 else 0
         @flag_Z = if @reg_A == value then 1 else 0
-        @flag_N = if (@reg_A - value) | 0x80 then 1 else 0
+        @flag_N = if (@reg_A - value) & 0x80 then 1 else 0
     
     op_CPX: (load) ->
         value = load()
         @flag_C = if @reg_X >= value then 1 else 0
         @flag_Z = if @reg_X == value then 1 else 0
-        @flag_N = if (@reg_X - value) | 0x80 then 1 else 0
+        @flag_N = if (@reg_X - value) & 0x80 then 1 else 0
     
     op_CPY: (load) ->
         value = load()
         @flag_C = if @reg_Y >= value then 1 else 0
         @flag_Z = if @reg_Y == value then 1 else 0
-        @flag_N = if (@reg_Y - value) | 0x80 then 1 else 0
+        @flag_N = if (@reg_Y - value) & 0x80 then 1 else 0
     
     op_DEC: (load, store) ->
         value = load() - 1
@@ -439,7 +439,7 @@ class Cpu
     op_EOR: (load, store) ->
         @reg_A ^= load()
         @flag_Z = if @reg_A == 0 then 1 else 0
-        @flag_N = if @reg_A | 0x80 then 1 else 0
+        @flag_N = if @reg_A & 0x80 then 1 else 0
 
     op_INC: (load, store) ->
         value = (load() + 1) & 0xff
@@ -470,17 +470,17 @@ class Cpu
     op_LDA: (load) ->
         @reg_A = load()
         @flag_Z = if @reg_A == 0 then 1 else 0
-        @flag_N = if @reg_A | 0x80 then 1 else 0
+        @flag_N = if @reg_A & 0x80 then 1 else 0
     
     op_LDX: (load) ->
         @reg_X = load()
         @flag_Z = if @reg_X == 0 then 1 else 0
-        @flag_N = if @reg_X | 0x80 then 1 else 0
+        @flag_N = if @reg_X & 0x80 then 1 else 0
     
     op_LDY: (load) ->
         @reg_Y = load()
         @flag_Z = if @reg_Y == 0 then 1 else 0
-        @flag_N = if @reg_Y | 0x80 then 1 else 0
+        @flag_N = if @reg_Y & 0x80 then 1 else 0
     
     op_LSR: (load, store) ->
         value = load()
@@ -493,7 +493,7 @@ class Cpu
     op_ORA: (load) ->
         @reg_A |= load()
         @flag_Z = if @reg_A == 0 then 1 else 0
-        @flag_N = if @reg_A | 0x80 then 1 else 0
+        @flag_N = if @reg_A & 0x80 then 1 else 0
     
     op_PHA: -> @push(@reg_A)
     
@@ -502,7 +502,7 @@ class Cpu
     op_PLA: ->
         @reg_A = @pull()
         @flag_Z = if @reg_A == 0 then 1 else 0
-        @flag_N = if @reg_A | 0x80 then 1 else 0
+        @flag_N = if @reg_A & 0x80 then 1 else 0
     
     op_PLP: ->
         @setStatusRegister(@pull())
@@ -558,29 +558,29 @@ class Cpu
     op_TAX: ->
         @reg_X = @reg_A
         @flag_Z = if @reg_X == 0 then 1 else 0
-        @flag_N = if @reg_X | 0x80 then 1 else 0
+        @flag_N = if @reg_X & 0x80 then 1 else 0
 
     op_TAY: ->
         @reg_Y = @reg_A
         @flag_Z = if @reg_Y == 0 then 1 else 0
-        @flag_N = if @reg_Y | 0x80 then 1 else 0
+        @flag_N = if @reg_Y & 0x80 then 1 else 0
     
     op_TSX: ->
         @reg_X = @reg_SP
         @flag_Z = if @reg_X == 0 then 1 else 0
-        @flag_N = if @reg_X | 0x80 then 1 else 0
+        @flag_N = if @reg_X & 0x80 then 1 else 0
 
     op_TXA: ->
         @reg_A = @reg_X
         @flag_Z = if @reg_A == 0 then 1 else 0
-        @flag_N = if @reg_A | 0x80 then 1 else 0
+        @flag_N = if @reg_A & 0x80 then 1 else 0
 
     op_TXS: -> @reg_SP = @reg_X
     
     op_TYA: ->
         @reg_A = @reg_Y
         @flag_Z = if @reg_A == 0 then 1 else 0
-        @flag_N = if @reg_A | 0x80 then 1 else 0
+        @flag_N = if @reg_A & 0x80 then 1 else 0
     
     branch: (predicate) ->
         offset =
