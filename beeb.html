@@ -6,8 +6,14 @@
   </head>
   <body>
     <h1>jsbeeb</h1>
-    <pre><div id="log"></div></pre>
+    <table>
+      <tr><th>PC</th><th>A</th><th>X</th><th>Y</th><th>SP</th></tr>
+      <tr><td id="pc"></td><td id="a"></td><td id="x"></td><td id="y"></td><td id="sp"></td></tr>
+    </table>
+    <div><pre id="output"></pre></div>
+    <div><pre id="log"></pre></div>
     <script src="os12.rom.js"></script>
+    <script src="basic2.rom.js"></script>
     <script src="cpu.js"></script>
   </body>
 </html>
