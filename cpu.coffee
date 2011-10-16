@@ -385,8 +385,11 @@ class Cpu
         @flag_N = if value & 0x80 then 1 else 0
     
     op_BRK: ->
-        @pushWord(@reg_PC + 1)
-        @push(@getStatusRegister() | 0x10)
+        @log "BRK"
+        @pushWord(@reg_PC + 2)
+        @flag_B = 1
+        @push(@getStatusRegister())
+        @flag_I = 1
         @reg_PC = @loadWord(0xfffe)
     
     op_CLC: -> @flag_C = 0
@@ -460,10 +463,9 @@ class Cpu
         @reg_PC = addr
     
     op_JSR: ->
-        @pushWord(@reg_PC + 3)
-        addr = @loadWord(@reg_PC + 1)
-        @log "Jumping to subroutine at #{addr.toString(16)}"
-        @reg_PC = addr
+        @pushWord(@reg_PC + 2)
+        @reg_PC = @loadWord(@reg_PC + 1)
+        @log "Jumping to subroutine at #{@reg_PC.toString(16)}"
     
     op_LDA: (load) ->
         @reg_A = load()
@@ -526,14 +528,12 @@ class Cpu
     
     op_RTI: ->
         @setStatusRegister(@pull())
-        addr = @pullWord()
-        @log "Returning to #{addr.toString(16)} from interrupt"
-        @reg_PC = addr
+        @reg_PC = @pullWord()
+        @log "Returning to #{@reg_PC.toString(16)} from interrupt"
     
     op_RTS: ->
-        addr = @pullWord()
-        @log "Returning to #{addr.toString(16)}"
-        @reg_PC = addr
+        @reg_PC = @pullWord() + 1
+        @log "Returning to #{@reg_PC.toString(16)}"
     
     op_SBC: (load) ->
         @reg_A -= load() + if @flag_C then 0 else 1
