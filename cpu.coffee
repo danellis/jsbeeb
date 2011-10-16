@@ -589,7 +589,8 @@ class Cpu
                 if offset < 0x80 then offset else offset - 256
             else
                 0
-        # unless offset == 0 then log "Branch from #{@reg_PC.toString(16)} to #{(@reg_PC + offset + 2).toString(16)}"
+        # unless offset == 0 then @log "Branching to #{(@reg_PC + offset + 2).toString(16)}"
+        if offset == -2 then throw "Infinitely looping branch"
         @reg_PC += offset + 2
     
     getStatusRegister: ->
