@@ -593,17 +593,17 @@ class Cpu
         @reg_PC += offset + 2
     
     getStatusRegister: ->
-        @reg_C | @reg_Z << 1 | @reg_I << 2 | @reg_D << 3 | @reg_B << 4 |
-            @reg_V << 6 | @reg_N << 7
+        @flag_C | @flag_Z << 1 | @flag_I << 2 | @flag_D << 3 | @flag_B << 4 |
+            @flag_V << 6 | @flag_N << 7
     
     setStatusRegister: (value) ->
-        @reg_C = (value & 0x01)
-        @reg_Z = (value & 0x02) >> 1
-        @reg_I = (value & 0x04) >> 2
-        @reg_D = (value & 0x08) >> 3
-        @reg_B = (value & 0x10) >> 4
-        @reg_V = (value & 0x40) >> 6
-        @reg_N = (value & 0x80) >> 7
+        @flag_C = (value & 0x01)
+        @flag_Z = (value & 0x02) >> 1
+        @flag_I = (value & 0x04) >> 2
+        @flag_D = (value & 0x08) >> 3
+        @flag_B = (value & 0x10) >> 4
+        @flag_V = (value & 0x40) >> 6
+        @flag_N = (value & 0x80) >> 7
     
     log: (message) ->
         @ui.log("[#{@reg_PC.toString(16)}] #{message}")
