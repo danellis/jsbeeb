@@ -166,11 +166,11 @@ class Cpu
     
     # Pre-indexed, X mode
     load_idxx: => @load(@loadWord(@load(@reg_PC + 1) + @reg_X))
-    store_idxx: => @store(@loadWord(@load(@reg_PC + 1) + @reg_X), value)
+    store_idxx: (value) => @store(@loadWord(@load(@reg_PC + 1) + @reg_X), value)
     
     # Post-indexed, Y mode
-    load_idxy: => @load(@loadWord(@load(@reg_PC + 1)) + @reg_X)
-    store_idxy: (value) => @store(@loadWord(@load(@reg_PC + 1)) + @reg_X, value)
+    load_idxy: => @load(@loadWord(@load(@reg_PC + 1)) + @reg_Y)
+    store_idxy: (value) => @store(@loadWord(@load(@reg_PC + 1)) + @reg_Y, value)
     
     # Opcodes
     op_00: -> @op_BRK(); 0
