@@ -94,15 +94,21 @@ class Cpu
             throw "Opcode #{hexOp} not implemented"
     
     # Direct 8- and 16-bit loads and stores
-    load: (address) -> @memory_map[address >> 8].load(address)
+    load: (address) ->
+        address &= 0xffff
+        @memory_map[address >> 8].load(address)
 
-    store: (address, value) -> @memory_map[address >> 8].store(address, value)
+    store: (address, value) ->
+        address &= 0xffff
+        @memory_map[address >> 8].store(address, value)
 
     loadWord: (address) ->
+        address &= 0xffff
         @memory_map[address >> 8].load(address) |
         @memory_map[address >> 8].load(address + 1) << 8
 
     storeWord: (address, value) ->
+        address &= 0xffff
         @memory_map[address >> 8].store(address, value & 0xff)
         @memory_map[address >> 8].store(address + 1, value >> 8)
     
