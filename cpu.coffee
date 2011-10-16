@@ -1,10 +1,27 @@
 class Ui
     constructor: ->
         @element = document.getElementById('log')
+        @pc = document.getElementById('pc')
+        @a = document.getElementById('a')
+        @x = document.getElementById('x')
+        @y = document.getElementById('y')
+        @sp = document.getElementById('sp')
+        @output = document.getElementById('output')
     
     log: (message) ->
         @element.appendChild document.createTextNode(message)
         @element.appendChild document.createElement("br")
+    
+    updateRegisters: (pc, a, x, y, sp) ->
+        @pc.innerText = pc.toString(16)
+        @a.innerText = "#{a.toString(16)} (#{a})"
+        @x.innerText = "#{x.toString(16)} (#{x})"
+        @y.innerText = "#{y.toString(16)} (#{y})"
+        @sp.innerText = sp.toString(16)
+    
+    writeChar: (char) ->
+        console.log "OSWRCH: #{char.toString()}"
+        @output.innerText += String.fromCharCode(char)
 
 ui = new Ui('log')
 
@@ -58,8 +75,8 @@ class Cpu
         @reg_A = 0
         @reg_X = 0
         @reg_Y = 0
-        @reg_PC = 0
-        @reg_SP = 0
+        @reg_PC = @loadWord(0xfffc)
+        @reg_SP = 0xff
 
         @flag_C = 0
         @flag_Z = 0
@@ -69,29 +86,41 @@ class Cpu
         @flag_V = 0
         @flag_N = 0
         
-    run: ->
-        @log("Starting CPU")
-        @reg_PC = @loadWord(0xfffc)
-        @log("Reset vector: #{@reg_PC.toString(16)}")
-        halted = false
-        until halted
-            try
-                @execute()
-            catch error
-                halted = true
-                alert("CPU halted at #{@reg_PC.toString(16)}: #{error}")
+        @halted = false
+        
+    run: =>
+        for i in [1..1000] by 1
+            @step()
+            if @halted
+                break
+        unless @halted then window.setTimeout(@run, 0)
         null
     
+    step: ->
+        if @reg_PC == 0xe0a4
+            @ui.writeChar(@reg_A)
+            @op_RTS()
+        else
+            @execute()
+    
     execute: ->
+        if @reg_PC == 0xdb6e then console.log "Should have written 'BBC Computer'"
         op = @load(@reg_PC)
         hexOp = (if op < 16 then '0' else '') + op.toString(16)
         methodName = "op_#{hexOp}"
-        # @ui.log("PC = #{@reg_PC.toString(16)}; op #{hexOp}")
-        if methodName of this
-            offset = this[methodName]()
-            @reg_PC += offset
-        else
-            throw "Opcode #{hexOp} not implemented"
+        @log("Opcode #{hexOp}")
+        try
+            if methodName of this
+                offset = this[methodName]()
+                @reg_PC += offset
+            else
+                throw "Opcode #{hexOp} not implemented"
+        catch error
+            @halted = true
+            alert("CPU halted at #{@reg_PC.toString(16)}: #{error}")
+        @ui.updateRegisters(@reg_PC, @reg_A, @reg_X, @reg_Y, @reg_SP)
+    
+    halt: -> @halted = true
     
     # Direct 8- and 16-bit loads and stores
     load: (address) ->
