@@ -78,13 +78,13 @@ class Cpu
         @reg_PC = @loadWord(0xfffc)
         @reg_SP = 0xff
 
-        @flag_C = 0
-        @flag_Z = 0
-        @flag_I = 0
-        @flag_D = 0
-        @flag_B = 0
-        @flag_V = 0
-        @flag_N = 0
+        @flag_C = false
+        @flag_Z = false
+        @flag_I = false
+        @flag_D = false
+        @flag_B = false
+        @flag_V = false
+        @flag_N = false
         
         @halted = false
         
@@ -358,31 +358,31 @@ class Cpu
     # Operations
     op_ADC: (load) ->
         value = @reg_A + load() + @flag_C
-        @flag_C = if value & 0x100 then 1 else 0
         @reg_A = value & 0xff
-        @flag_Z = if value == 0 then 1 else 0
-        @flag_N = if value & 0x80 then 1 else 0
-        @flag_V = if value & 0x80 != @reg_A & 0x80 then 1 else 0
+        @flag_C = !!(value & 0x100)
+        @flag_Z = !value
+        @flag_N = !!(value & 0x80)
+        @flag_V = value & 0x80 != @reg_A & 0x80
     
     op_AND: (load) ->
         @reg_A &= load()
-        @flag_Z = if @reg_A == 0 then 1 else 0
-        @flag_N = if @reg_A & 0x80 then 1 else 0
+        @flag_Z = !@reg_A
+        @flag_N = !!(@reg_A & 0x80)
     
     op_ASL: (load, store) ->
         value = load()
         value = value << 1
-        @flag_C = if value & 0x100 then 1 else 0
+        @flag_C = !!(value & 0x100)
         value &= 0xff
         store value
-        @flag_N = if value & 0x80 then 1 else 0
-        @flag_Z = if value == 0 then 1 else 0
+        @flag_N = !!(value & 0x80)
+        @flag_Z = !value
     
     op_BIT: (load) ->
         value = load()
-        @flag_Z = if (@reg_A & value) == 0 then 1 else 0
-        @flag_V = if value & 0x40 then 1 else 0
-        @flag_N = if value & 0x80 then 1 else 0
+        @flag_Z = !(@reg_A & value)
+        @flag_V = !!(value & 0x40)
+        @flag_N = !!(value & 0x80)
     
     op_BRK: ->
         @log "BRK"
@@ -392,70 +392,70 @@ class Cpu
         @flag_I = 1
         @reg_PC = @loadWord(0xfffe)
     
-    op_CLC: -> @flag_C = 0
+    op_CLC: -> @flag_C = false
     
-    op_CLD: -> @flag_D = 0
+    op_CLD: -> @flag_D = false
     
-    op_CLI: -> @flag_I = 0
+    op_CLI: -> @flag_I = false
     
-    op_CLV: -> @flag_V = 0
+    op_CLV: -> @flag_V = false
     
     op_CMP: (load) ->
         value = load()
-        @flag_C = if @reg_A >= value then 1 else 0
-        @flag_Z = if @reg_A == value then 1 else 0
-        @flag_N = if (@reg_A - value) & 0x80 then 1 else 0
+        @flag_C = @reg_A >= value
+        @flag_Z = @reg_A == value
+        @flag_N = !!((@reg_A - value) & 0x80)
     
     op_CPX: (load) ->
         value = load()
-        @flag_C = if @reg_X >= value then 1 else 0
-        @flag_Z = if @reg_X == value then 1 else 0
-        @flag_N = if (@reg_X - value) & 0x80 then 1 else 0
+        @flag_C = @reg_X >= value
+        @flag_Z = @reg_X == value
+        @flag_N = !!((@reg_X - value) & 0x80)
     
     op_CPY: (load) ->
         value = load()
-        @flag_C = if @reg_Y >= value then 1 else 0
-        @flag_Z = if @reg_Y == value then 1 else 0
-        @flag_N = if (@reg_Y - value) & 0x80 then 1 else 0
+        @flag_C = @reg_Y >= value
+        @flag_Z = @reg_Y == value
+        @flag_N = !!((@reg_Y - value) & 0x80)
     
     op_DEC: (load, store) ->
         value = load() - 1
         if value == -1
             value = 255
         store value
-        @flag_Z = if value == 0 then 1 else 0
-        @flag_N = if value & 0x80 then 1 else 0
+        @flag_Z = !value
+        @flag_N = !!(value & 0x80)
     
     op_DEX: ->
         @reg_X = (@reg_X - 1) & 0xff
-        @flag_Z = if @reg_X == 0 then 1 else 0
-        @flag_N = if @reg_X & 0x80 then 1 else 0
+        @flag_Z = !@reg_X
+        @flag_N = !!(@reg_X & 0x80)
     
     op_DEY: ->
         @reg_Y = (@reg_Y - 1) & 0xff
-        @flag_Z = if @reg_Y == 0 then 1 else 0
-        @flag_N = if @reg_Y & 0x80 then 1 else 0
+        @flag_Z = !@reg_Y
+        @flag_N = !!(@reg_Y & 0x80)
     
     op_EOR: (load, store) ->
         @reg_A ^= load()
-        @flag_Z = if @reg_A == 0 then 1 else 0
-        @flag_N = if @reg_A & 0x80 then 1 else 0
+        @flag_Z = !@reg_A
+        @flag_N = !!(@reg_A & 0x80)
 
     op_INC: (load, store) ->
         value = (load() + 1) & 0xff
         store value
-        @flag_Z = if value == 0 then 1 else 0
-        @flag_N = if value & 0x80 then 1 else 0
+        @flag_Z = !value
+        @flag_N = !!(value & 0x80)
 
     op_INX: ->
         @reg_X = (@reg_X + 1) & 0xff
-        @flag_Z = if @reg_X == 0 then 1 else 0
-        @flag_N = if @reg_X & 0x80 then 1 else 0
+        @flag_Z = !@reg_X
+        @flag_N = !!(@reg_X & 0x80)
 
     op_INY: ->
         @reg_Y = (@reg_Y + 1) & 0xff
-        @flag_Z = if @reg_Y == 0 then 1 else 0
-        @flag_N = if @reg_Y & 0x80 then 1 else 0
+        @flag_Z = !@reg_Y
+        @flag_N = !!(@reg_Y & 0x80)
     
     op_JMP: (load) ->
         addr = load()
@@ -469,31 +469,31 @@ class Cpu
     
     op_LDA: (load) ->
         @reg_A = load()
-        @flag_Z = if @reg_A == 0 then 1 else 0
-        @flag_N = if @reg_A & 0x80 then 1 else 0
+        @flag_Z = !@reg_A
+        @flag_N = !!(@reg_A & 0x80)
     
     op_LDX: (load) ->
         @reg_X = load()
-        @flag_Z = if @reg_X == 0 then 1 else 0
-        @flag_N = if @reg_X & 0x80 then 1 else 0
+        @flag_Z = !@reg_X
+        @flag_N = !!(@reg_X & 0x80)
     
     op_LDY: (load) ->
         @reg_Y = load()
-        @flag_Z = if @reg_Y == 0 then 1 else 0
-        @flag_N = if @reg_Y & 0x80 then 1 else 0
+        @flag_Z = !@reg_Y
+        @flag_N = !!(@reg_Y & 0x80)
     
     op_LSR: (load, store) ->
         value = load()
-        @flag_C = value & 1
+        @flag_C = !!(value & 1)
         value = (value >> 1) & 0x7f
         store value
-        @flag_Z = if value == 0 then 1 else 0
-        @flag_N = 0
+        @flag_Z = !value
+        @flag_N = false
     
     op_ORA: (load) ->
         @reg_A |= load()
-        @flag_Z = if @reg_A == 0 then 1 else 0
-        @flag_N = if @reg_A & 0x80 then 1 else 0
+        @flag_Z = !@reg_A
+        @flag_N = !!(@reg_A & 0x80)
     
     op_PHA: -> @push(@reg_A)
     
@@ -501,8 +501,8 @@ class Cpu
     
     op_PLA: ->
         @reg_A = @pull()
-        @flag_Z = if @reg_A == 0 then 1 else 0
-        @flag_N = if @reg_A & 0x80 then 1 else 0
+        @flag_Z = !@reg_A
+        @flag_N = !!(@reg_A & 0x80)
     
     op_PLP: ->
         @setStatusRegister(@pull())
@@ -513,18 +513,18 @@ class Cpu
         value |= if value & 0x100 then 1 else 0
         value &= 0xff
         store value
-        @flag_C = value & 1
-        @flag_Z = if value == 0 then 1 else 0
-        @flag_N = if value & 0x80 then 1 else 0
+        @flag_C = !!(value & 1)
+        @flag_Z = !value
+        @flag_N = !!(value & 0x80)
     
     op_ROR: (load, store) ->
         value = load()
-        value |= if @flag_C then 0x100 else 0
-        @flag_C = value & 1
+        value |= @flag_C << 8
+        @flag_C = !!(value & 1)
         value >>= 1
         store value
-        @flag_Z = if value == 0 then 1 else 0
-        @flag_N = if value & 0x80 then 1 else 0
+        @flag_Z = !value
+        @flag_N = !!(value & 0x80)
     
     op_RTI: ->
         @setStatusRegister(@pull())
@@ -537,17 +537,17 @@ class Cpu
     
     op_SBC: (load) ->
         @reg_A -= load() + if @flag_C then 0 else 1
-        @flag_V = if -128 <= @reg_A <= 127 then 0 else 1
-        @flag_C = if @reg_A >= 0 then 1 else 0
-        @flag_N = if @reg_A & 0x80 then 1 else 0
-        @flag_Z = if @reg_A == 0 then 1 else 0
+        @flag_V = (@reg_A > 127 or @reg_A < -128)
+        @flag_C = @reg_A >= 0
+        @flag_N = !!(@reg_A & 0x80)
+        @flag_Z = !@reg_A
         @reg_A &= 0xff
     
-    op_SEC: -> @flag_C = 1
+    op_SEC: -> @flag_C = true
     
     op_SED: -> throw "BCD mode not supported"
     
-    op_SEI: -> @flag_I = 1
+    op_SEI: -> @flag_I = true
 
     op_STA: (store) -> store @reg_A
     
@@ -557,30 +557,30 @@ class Cpu
 
     op_TAX: ->
         @reg_X = @reg_A
-        @flag_Z = if @reg_X == 0 then 1 else 0
-        @flag_N = if @reg_X & 0x80 then 1 else 0
+        @flag_Z = !@reg_X
+        @flag_N = !!(@reg_X & 0x80)
 
     op_TAY: ->
         @reg_Y = @reg_A
-        @flag_Z = if @reg_Y == 0 then 1 else 0
-        @flag_N = if @reg_Y & 0x80 then 1 else 0
+        @flag_Z = !@reg_Y
+        @flag_N = !!(@reg_Y & 0x80)
     
     op_TSX: ->
         @reg_X = @reg_SP
-        @flag_Z = if @reg_X == 0 then 1 else 0
-        @flag_N = if @reg_X & 0x80 then 1 else 0
+        @flag_Z = !@reg_X
+        @flag_N = !!(@reg_X & 0x80)
 
     op_TXA: ->
         @reg_A = @reg_X
-        @flag_Z = if @reg_A == 0 then 1 else 0
-        @flag_N = if @reg_A & 0x80 then 1 else 0
+        @flag_Z = !@reg_A
+        @flag_N = !!(@reg_A & 0x80)
 
     op_TXS: -> @reg_SP = @reg_X
     
     op_TYA: ->
         @reg_A = @reg_Y
-        @flag_Z = if @reg_A == 0 then 1 else 0
-        @flag_N = if @reg_A & 0x80 then 1 else 0
+        @flag_Z = !@reg_A
+        @flag_N = !!(@reg_A & 0x80)
     
     branch: (predicate) ->
         offset =
@@ -598,13 +598,13 @@ class Cpu
             @flag_V << 6 | @flag_N << 7
     
     setStatusRegister: (value) ->
-        @flag_C = (value & 0x01)
-        @flag_Z = (value & 0x02) >> 1
-        @flag_I = (value & 0x04) >> 2
-        @flag_D = (value & 0x08) >> 3
-        @flag_B = (value & 0x10) >> 4
-        @flag_V = (value & 0x40) >> 6
-        @flag_N = (value & 0x80) >> 7
+        @flag_C = !!(value & 0x01)
+        @flag_Z = !!(value & 0x02)
+        @flag_I = !!(value & 0x04)
+        @flag_D = !!(value & 0x08)
+        @flag_B = !!(value & 0x10)
+        @flag_V = !!(value & 0x40)
+        @flag_N = !!(value & 0x80)
     
     log: (message) ->
         @ui.log("[#{@reg_PC.toString(16)}] #{message}")
