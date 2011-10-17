@@ -379,8 +379,8 @@ class Cpu
         @flag_Z = if value == 0 then 1 else 0
     
     op_BIT: (load) ->
-        value = @reg_A & load()
-        @flag_Z = if value == 0 then 1 else 0
+        value = load()
+        @flag_Z = if (@reg_A & value) == 0 then 1 else 0
         @flag_V = if value & 0x40 then 1 else 0
         @flag_N = if value & 0x80 then 1 else 0
     
