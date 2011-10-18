@@ -56,11 +56,31 @@ class PagedRom
         @ui.log "[PagedRom] Switching to rom #{rom}"
         @rom = rom
 
+class Display
+    constructor: (@start) ->
+        @screen = document.getElementById('screen')
+        @array = new Uint8Array(1024)
+        @array[i] = 32 for i in [0...1024]
+        @update()
+    
+    load: (address) -> @array[address - @start]
+    
+    store: (address, value) ->
+        @array[address - @start] = value
+        @update()
+        
+    update: ->
+        text = (String.fromCharCode(c) for c in @array).join('')
+        @screen.innerText = text
+
 class Sheila
     constructor: (@ui, @callbacks) ->
+        @crtcRegister = 0
     
     storers:
         0xfe30: (value) -> @callbacks['selectRom']?(value)
+        0xfe00: (value) -> @crtcRegister = value
+        0xfe01: (value) -> @ui.log "Wrote 0x#{value.toString(16)} (#{value}) to 6845 R#{@crtcRegister}"
     
     load: (address) ->
         @ui.log "Sheila read from 0x#{address.toString(16)}"
@@ -97,18 +117,10 @@ class Cpu
         null
     
     step: ->
-        if @reg_PC == 0xe0a4
-            @ui.writeChar(@reg_A)
-            @op_RTS()
-        else
-            @execute()
-    
-    execute: ->
-        if @reg_PC == 0xdb6e then console.log "Should have written 'BBC Computer'"
         op = @load(@reg_PC)
         hexOp = (if op < 16 then '0' else '') + op.toString(16)
         methodName = "op_#{hexOp}"
-        @log("Opcode #{hexOp}")
+        # @log("Opcode #{hexOp}")
         try
             if methodName of this
                 offset = this[methodName]()
@@ -611,17 +623,22 @@ class Cpu
     
 class BbcMicro
     constructor: (ui) ->
-        @pagedRom = new PagedRom(ui, 0x8000, {15: basic_rom})
+        pagedRom = new PagedRom(ui, 0x8000, {15: basic_rom})
+        display = new Display(0x7c00)
         memoryDevices =
             r: new Ram(0x8000)
+            d: display
             o: new Rom(0xc000, os_rom)
-            p: @pagedRom
+            p: pagedRom
             f: new UnmappedPage("FRED")
             j: new UnmappedPage("JIM")
-            s: new Sheila(ui, {selectRom: (rom) => @pagedRom.select(rom)})
+            s: new Sheila(ui, {
+                selectRom: (rom) => pagedRom.select(rom),
+                setHimem: (page) => @cpu.memoryMap[p] = display for p in [page..0x7f]
+            })
         memoryMap =
             "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr" +
-            "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr" +
+            "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrdddd" +
             "pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp" +
             "oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooofjso"
         @cpu = new Cpu(ui, memoryDevices[p] for p in memoryMap)
