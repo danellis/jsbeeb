@@ -82,14 +82,14 @@ class Sheila
     storers:
         0xfe30: (value) -> @callbacks['selectRom']?(value)
         0xfe00: (value) -> @crtcRegister = value
-        0xfe01: (value) -> @ui.log "Wrote 0x#{value.toString(16)} (#{value}) to 6845 R#{@crtcRegister}"
+        0xfe01: (value) -> @ui.log "[Sheila] Wrote 0x#{value.toString(16)} (#{value}) to 6845 R#{@crtcRegister}"
     
     load: (address) ->
-        @ui.log "Sheila read from 0x#{address.toString(16)}"
+        @ui.log "[Sheila] Read from 0x#{address.toString(16)}"
         0
 
     store: (address, value) ->
-        @ui.log "Sheila write to 0x#{address.toString(16)}"
+        @ui.log "[Sheila] Write to 0x#{address.toString(16)}"
         @storers[address]?.call(this, value)
 
 class Cpu
@@ -122,7 +122,6 @@ class Cpu
         op = @load(@reg_PC)
         hexOp = (if op < 16 then '0' else '') + op.toString(16)
         methodName = "op_#{hexOp}"
-        # @log("Opcode #{hexOp}")
         try
             if methodName of this
                 offset = this[methodName]()
@@ -157,22 +156,18 @@ class Cpu
     
     push: (value) ->
         @store(0x100 + @reg_SP--, value)
-        @log "push #{value.toString(16)} -> reg_SP=#{@reg_SP.toString(16)}" 
 
     pull: ->
         value = @load(0x100 + ++@reg_SP)
-        @log "pull -> #{value.toString(16)}, reg_SP=#{@reg_SP.toString(16)}" 
         value
     
     pushWord: (value) ->
         @storeWord(0x100 + @reg_SP - 1, value)
         @reg_SP -= 2
-        @log "pushWord #{value.toString(16)} -> reg_SP=#{@reg_SP.toString(16)}" 
 
     pullWord: ->
         @reg_SP += 2
         value = @loadWord(0x100 + @reg_SP - 1)
-        @log "pullWord -> #{value.toString(16)}, reg_SP=#{@reg_SP.toString(16)}" 
         value
     
     # Immediate mode
@@ -473,13 +468,11 @@ class Cpu
     
     op_JMP: (load) ->
         addr = load()
-        @log "JMP to #{addr.toString(16)}"
         @reg_PC = addr
     
     op_JSR: ->
         @pushWord(@reg_PC + 2)
         @reg_PC = @loadWord(@reg_PC + 1)
-        @log "Jumping to subroutine at #{@reg_PC.toString(16)}"
     
     op_LDA: (load) ->
         @reg_A = load()
@@ -543,11 +536,9 @@ class Cpu
     op_RTI: ->
         @setStatusRegister(@pull())
         @reg_PC = @pullWord()
-        @log "Returning to #{@reg_PC.toString(16)} from interrupt"
     
     op_RTS: ->
         @reg_PC = @pullWord() + 1
-        @log "Returning to #{@reg_PC.toString(16)}"
     
     op_SBC: (load) ->
         @reg_A -= load() + if @flag_C then 0 else 1
@@ -603,7 +594,6 @@ class Cpu
                 if offset < 0x80 then offset else offset - 256
             else
                 0
-        # unless offset == 0 then @log "Branching to #{(@reg_PC + offset + 2).toString(16)}"
         if offset == -2 then throw "Infinitely looping branch"
         @reg_PC += offset + 2
     
@@ -649,4 +639,5 @@ class BbcMicro
 
 ui = new Ui
 micro = new BbcMicro(ui)
+console.log "Go!"
 micro.start()
