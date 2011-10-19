@@ -18,10 +18,6 @@ class Ui
         @x.innerText = "#{x.toString(16)} (#{x})"
         @y.innerText = "#{y.toString(16)} (#{y})"
         @sp.innerText = sp.toString(16)
-    
-    writeChar: (char) ->
-        console.log "OSWRCH: #{char.toString()}"
-        @output.innerText += String.fromCharCode(char)
 
 ui = new Ui('log')
 
@@ -58,20 +54,26 @@ class PagedRom
 
 class Display
     constructor: (@start) ->
-        @screen = document.getElementById('screen')
         @array = new Uint8Array(1024)
-        @array[i] = 32 for i in [0...1024]
-        @update()
+        @screen = document.getElementById('screen')
+        @context = @screen.getContext('2d')
+        @context.fillStyle = "#000000"
+        @context.fillRect(0, 0, 480, 475)
+        @std_font = new Image()
+        @std_font.src = 'fonts/ttext-std.png'
     
     load: (address) -> @array[address - @start]
     
     store: (address, value) ->
-        @array[address - @start] = value
-        @update()
-        
-    update: ->
-        text = (String.fromCharCode(c) for c in @array).join('')
-        @screen.innerText = text
+        offset = address - @start
+        @array[offset] = value
+        line = Math.floor(offset / 40)
+        column = offset % 40
+        @context.drawImage(
+            @std_font,
+            value * 12, 6 * 19, 12, 19,
+            column * 12, line * 19, 12, 19
+        )
 
 class Sheila
     constructor: (@ui, @callbacks) ->
