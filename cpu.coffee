@@ -615,7 +615,7 @@ class Cpu
     
 class BbcMicro
     constructor: (ui) ->
-        pagedRom = new PagedRom(ui, 0x8000, {15: basic_rom})
+        pagedRom = new PagedRom(ui, 0x8000, {15: basic_rom, 12: dfs_rom})
         display = new Display(0x7c00)
         memoryDevices =
             r: new Ram(0x8000)
